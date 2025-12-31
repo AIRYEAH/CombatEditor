@@ -120,7 +120,7 @@ namespace CombatEditor
 
         public void F2ToRename(Rect FoldOutRect, int index)
         {
-            SerializedObject so = new SerializedObject(SelectedController);
+            SerializedObject so = new SerializedObject(SelectedController._combatDataStorage);
             so.Update();
             SerializedProperty combatDatas = so.FindProperty("CombatDatas");
             Event e = Event.current;

@@ -179,6 +179,8 @@ namespace CombatEditor
 					if (NodeList == null || CombatDataStorge == null)
 					{
 						InitNodeReorableList();
+						// if (combatEditor.SelectedController._combatDataStorage == null)
+						// 	EditorGUILayout.HelpBox("Please replace CombatDataStorage with SO Object from Disk", MessageType.Error);
 					}
 					CombatDataStorge.Update();
 					NodeList.DoLayoutList();
@@ -373,6 +375,10 @@ namespace CombatEditor
 
 		public void InitNodeReorableList()
 		{
+			if (combatEditor.SelectedController._combatDataStorage == null)
+			{
+				combatEditor.SelectedController._combatDataStorage = new CombatDataStorage();
+			}
 			CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
 			NodeList = new ReorderableList(CombatDataStorge, CombatDataStorge.FindProperty("Nodes"), true, true, true, true);
 			NodeList.drawHeaderCallback = (Rect rect) =>

@@ -141,6 +141,7 @@ namespace CombatEditor
 
         private void Update()
         {
+            if (_animator.runtimeAnimatorController == null) return;
 
             RunEffects(0);
             _animSpeedExecutor.Execute();
@@ -148,6 +149,8 @@ namespace CombatEditor
 
         private void FixedUpdate()
         {
+            if (_animator.runtimeAnimatorController == null) return;
+
             RunEffects(1);
         }
 
@@ -163,6 +166,9 @@ namespace CombatEditor
         /// </summary>
         public void RunEffects(int UpdateMode = 0)
         {
+            if (_animator.runtimeAnimatorController == null) return;
+            if (ClipID_To_EventEffects == null) return;
+
             for (int i = 0; i < _animator.layerCount; i++)
             {
                 var LayerIndex = i;
@@ -463,8 +469,10 @@ namespace CombatEditor
         public void SetCombatDataStorage(CombatDataStorage storage)
         {
             _combatDataStorage = storage;
+            ClipID_To_EventEffects = new Dictionary<int, List<AbilityEventWithEffects>>();
             // 重新初始化相关数据
             ClearNullReference();
+            InitClipsOnRunningLayers();
             InitAnimEffects();
         }
 
@@ -472,8 +480,8 @@ namespace CombatEditor
         {
             _combatDataStorage = null;
             // 重新初始化相关数据
-            ClearNullReference();
-            InitAnimEffects();
+            ClipID_To_EventEffects = null;
+
         }
         /// <summary>
         /// 运行时加载CombatDataStorage
