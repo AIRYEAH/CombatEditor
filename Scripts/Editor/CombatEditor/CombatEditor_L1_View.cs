@@ -34,7 +34,7 @@ namespace CombatEditor
             InitHeaderStyle();
             GUI.Box(HeadRect, "Animations", HeaderStyle);
         }
-      
+
         public void PaintControllerSelectorPopup()
         {
             if (SelectedController == null)
@@ -112,7 +112,7 @@ namespace CombatEditor
             if (IsDraggingL1)
             {
                 EditorGUI.DrawRect(L1DraggingTargetRect, Color.green);
-                if(TargetChangeThisFrame)
+                if (TargetChangeThisFrame)
                 {
                     TargetChangeThisFrame = false;
                     Repaint();
@@ -152,7 +152,7 @@ namespace CombatEditor
                             HighlightBGIfInspectType(InspectedType.AnimationConfig);
                         }
 
-                        HandleSwapEvents(data, DataSelectRect,i,j);
+                        HandleSwapEvents(data, DataSelectRect, i, j);
 
                         var ClipName = "Null";
                         if (data != null) ClipName = data.Clip ? data.Clip.name : "Empty";
@@ -173,7 +173,7 @@ namespace CombatEditor
             PaintAddGroupButton(AddGroupRect);
             HeightCounter += 2;
         }
-        
+
         public bool PaintGroupHeader(int GroupIndex, CombatGroup DataGroup, Rect rect)
         {
             Rect HeaderRect = new Rect(rect.x, rect.y, rect.width - 2 * LineHeight, LineHeight);
@@ -189,7 +189,7 @@ namespace CombatEditor
             }
             if (GUI.Button(GroupDeleteRect, "-", MyDeleteButtonStyle))
             {
-                SerializedObject so = new SerializedObject(SelectedController);
+                SerializedObject so = new SerializedObject(SelectedController._combatDataStorage);
                 so.Update();
                 SerializedProperty combatDatas = so.FindProperty("CombatDatas");
                 combatDatas.DeleteArrayElementAtIndex(GroupIndex);
@@ -203,7 +203,7 @@ namespace CombatEditor
         {
             if (GUI.Button(rect, "+Group"))
             {
-                SerializedObject so = new SerializedObject(SelectedController);
+                SerializedObject so = new SerializedObject(SelectedController._combatDataStorage);
                 so.Update();
                 SerializedProperty combatDatas = so.FindProperty("CombatDatas");
                 combatDatas.InsertArrayElementAtIndex(combatDatas.arraySize);

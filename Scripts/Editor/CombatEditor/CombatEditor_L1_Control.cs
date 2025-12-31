@@ -27,7 +27,7 @@ namespace CombatEditor
             return true;
         }
 
-    
+
         public void HandleSwapEvents(AbilityScriptableObject _data, Rect rect, int groupIndex, int arrayIndex)
         {
             var DataSelectRect = rect;
@@ -57,7 +57,7 @@ namespace CombatEditor
                     {
                         //Cant drag in itself!
                         if (GUIUtility.hotControl == controlID) return;
-                      
+
                         var VerticalDistance = e.mousePosition.y - DataSelectRect.y;
                         if (VerticalDistance < LineHeight && VerticalDistance >= 0)
                         {
@@ -83,7 +83,7 @@ namespace CombatEditor
                     {
                         if (IsDraggingL1)
                         {
-                            if(DataSelectRect.Contains(e.mousePosition))
+                            if (DataSelectRect.Contains(e.mousePosition))
                             {
                                 if (GUIUtility.hotControl == controlID)
                                 {
@@ -93,15 +93,15 @@ namespace CombatEditor
                         }
                     }
                     break;
-           
+
             }
         }
         public void HandleL1Drag()
         {
             Event e = Event.current;
-            if(e.type == EventType.MouseUp || e.type == EventType.Ignore)
+            if (e.type == EventType.MouseUp || e.type == EventType.Ignore)
             {
-                if(SwapRequired)
+                if (SwapRequired)
                 {
                     OnSwapAbilityObj();
                 }
@@ -116,7 +116,7 @@ namespace CombatEditor
 
             L1DraggingTargetRect = new Rect(0, 0, 0, 0);
         }
-       
+
 
         public void F2ToRename(Rect FoldOutRect, int index)
         {
@@ -154,7 +154,9 @@ namespace CombatEditor
         {
 
             AssetDatabase.SaveAssets();
-            SerializedObject so = new SerializedObject(SelectedController);
+            SerializedObject so = new SerializedObject(SelectedController._combatDataStorage);
+            // SerializedProperty combatDataStorage = so.FindProperty("_combatDataStorage");
+            // SerializedProperty combatDatas = combatDataStorage.FindPropertyRelative("CombatDatas");
             SerializedProperty combatDatas = so.FindProperty("CombatDatas");
             SerializedProperty ObjsProperty = combatDatas.GetArrayElementAtIndex(GroupIndex).FindPropertyRelative("CombatObjs");
             ObjsProperty.arraySize++;
@@ -249,7 +251,7 @@ namespace CombatEditor
         }
         public void OnDeleteAbilityObj(int i1, int i2)
         {
-            SerializedObject so = new SerializedObject(SelectedController);
+            SerializedObject so = new SerializedObject(SelectedController._combatDataStorage);
             so.Update();
             SerializedProperty combatDatas = so.FindProperty("CombatDatas");
             SerializedProperty ObjsProperty = combatDatas.GetArrayElementAtIndex(i1).FindPropertyRelative("CombatObjs");
@@ -274,7 +276,7 @@ namespace CombatEditor
             LoadL3();
 
 
-            ChangeInspectedType( InspectedType.AnimationConfig);
+            ChangeInspectedType(InspectedType.AnimationConfig);
         }
         public void ChangeInspectedType(InspectedType targetType)
         {

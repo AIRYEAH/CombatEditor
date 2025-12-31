@@ -35,7 +35,7 @@ namespace CombatEditor
 		}
 		public void ResetInspector()
 		{
-			CombatControllerSO = null;
+			CombatDataStorge = null;
 			NodeList = null;
 		}
 
@@ -94,7 +94,7 @@ namespace CombatEditor
 			{
 				float DefaultWidth = EditorGUIUtility.labelWidth;
 				EditorGUIUtility.labelWidth = 80;
-				SerializedObject so = new SerializedObject(combatEditor.SelectedController);
+				SerializedObject so = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
 				SerializedProperty combatDatas = so.FindProperty("CombatDatas");
 				so.Update();
 				if (combatEditor.CurrentGroupIndex < combatDatas.arraySize && combatEditor.CurrentGroupIndex >= 0)
@@ -164,6 +164,7 @@ namespace CombatEditor
 					CombatController controller = combatEditor.SelectedController;
 					SerializedObject so = new SerializedObject(controller);
 					//CombatControllerSO.Update();
+					//Animtor°úÍÑ
 					EditorGUILayout.PropertyField(so.FindProperty("_animator"));
 					if (combatEditor.SelectedController._animator != null)
 					{
@@ -172,14 +173,16 @@ namespace CombatEditor
 							EditorGUILayout.HelpBox("Animator transform should be the child transform of Combatcontroller!", MessageType.Error);
 						}
 					}
+					//?ÅÍÇÛÃÖÂ¸?ÅªSO°úÍÑ
+					EditorGUILayout.PropertyField(so.FindProperty("_combatDataStorage"));
 
-					if (NodeList == null || CombatControllerSO == null)
+					if (NodeList == null || CombatDataStorge == null)
 					{
 						InitNodeReorableList();
 					}
-					CombatControllerSO.Update();
+					CombatDataStorge.Update();
 					NodeList.DoLayoutList();
-					CombatControllerSO.ApplyModifiedProperties();
+					CombatDataStorge.ApplyModifiedProperties();
 					so.ApplyModifiedProperties();
 
 
@@ -201,7 +204,7 @@ namespace CombatEditor
 			string TargetPath = path + InsObj.name + ".asset";
 			while (true)
 			{
-				//ï¿½ï¿½ï¿½ï¿½Í¬ï¿½Ä¼ï¿½ï¿½Í¸ï¿½ï¿½ï¿½
+				//??????«Ì??????
 				if (File.Exists(TargetPath))
 				{
 					TargetPath = path + InsObj.name + "_" + index + ".asset";
@@ -213,6 +216,7 @@ namespace CombatEditor
 				index += 1;
 			}
 			AssetDatabase.CreateAsset(InsObj, TargetPath);
+			Debug.Log("Combat Editor file Create");
 			return InsObj;
 		}
 
@@ -365,11 +369,12 @@ namespace CombatEditor
 		}
 		ReorderableList NodeList;
 
-		SerializedObject CombatControllerSO;
+		SerializedObject CombatDataStorge;
+
 		public void InitNodeReorableList()
 		{
-			CombatControllerSO = new SerializedObject(combatEditor.SelectedController);
-			NodeList = new ReorderableList(CombatControllerSO, CombatControllerSO.FindProperty("Nodes"), true, true, true, true);
+			CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
+			NodeList = new ReorderableList(CombatDataStorge, CombatDataStorge.FindProperty("Nodes"), true, true, true, true);
 			NodeList.drawHeaderCallback = (Rect rect) =>
 				 {
 					 GUI.Label(rect, "CharacterNodes");
