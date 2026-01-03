@@ -93,18 +93,23 @@ namespace CombatEditor
 
         private void Start()
         {
-            ClipID_To_EventEffects = new Dictionary<int, List<AbilityEventWithEffects>>();
-            ClearNullReference();
-            InitClipsOnRunningLayers();
-            InitAnimEffects();
-            _animSpeedExecutor = new AnimSpeedExecutor(this);
-            _moveExecutor = new MoveExecutor(this);
+            // ClipID_To_EventEffects = new Dictionary<int, List<AbilityEventWithEffects>>();
+            // ClearNullReference();
+            // InitClipsOnRunningLayers();
+            // InitAnimEffects();
+            // _animSpeedExecutor = new AnimSpeedExecutor(this);
+            // _moveExecutor = new MoveExecutor(this);
         }
 
         public void InitClipsOnRunningLayers()
         {
             LayerActiveClipIDs = new List<int[]>();
-            for (int i = 0; i < _animator.layerCount; i++)
+            // _animator = GetComponentInChildren<HybridAnimancerComponent>();
+            // for (int i = 0; i < _animator.layerCount; i++)
+            // {
+            //     LayerActiveClipIDs.Add(null);
+            // }
+            for (int i = 0; i < 2; i++)     //默认了战斗动画状态机的层数只有两层，此处需要优化
             {
                 LayerActiveClipIDs.Add(null);
             }
@@ -142,6 +147,7 @@ namespace CombatEditor
         private void Update()
         {
             if (_animator.runtimeAnimatorController == null) return;
+            if (_combatDataStorage == null) return;
 
             RunEffects(0);
             _animSpeedExecutor.Execute();
@@ -150,6 +156,7 @@ namespace CombatEditor
         private void FixedUpdate()
         {
             if (_animator.runtimeAnimatorController == null) return;
+            if (_combatDataStorage == null) return;
 
             RunEffects(1);
         }

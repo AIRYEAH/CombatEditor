@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace CombatEditor
 {
-    public partial class AbilityEventPreview_Test : AbilityEventPreview
+    public partial class AbilityEventPreview_PrintLog : AbilityEventPreview
     {
         //Init Preview, for e.g, you can create your preview object here.
         public override void InitPreview()
@@ -15,14 +15,10 @@ namespace CombatEditor
             base.InitPreview();
         }
         // Triggers on startframe.
-        // public override void OnStartFrame()
-        // {
-        //     base.OnStartFrame();
-        // }
         public override void PassStartFrame()
         {
             base.PassStartFrame();
-            Debug.Log(EventObj.testMsg);
+            Debug.Log(EventObj.text);
         }
         //Update Preview when drag the timeline or timeline is playing.
         public override void PreviewRunning(float CurrentTimePercentage)
@@ -63,10 +59,10 @@ namespace CombatEditor
         }
     }
 
-    public partial class AbilityEventPreview_Test : AbilityEventPreview
+    public partial class AbilityEventPreview_PrintLog : AbilityEventPreview
     {
-        public AbilityEventObj_Test EventObj => (AbilityEventObj_Test)_EventObj;
-        public AbilityEventPreview_Test(AbilityEventObj Obj) : base(Obj)
+        public AbilityEventObj_PrintLog EventObj => (AbilityEventObj_PrintLog)_EventObj;
+        public AbilityEventPreview_PrintLog(AbilityEventObj Obj) : base(Obj)
         {
             _EventObj = Obj;
         }

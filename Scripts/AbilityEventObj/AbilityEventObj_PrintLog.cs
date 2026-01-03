@@ -1,41 +1,37 @@
 using UnityEngine;
-//Replace the "Test" with the event you want to create
+//Replace the "PrintLog" with the event you want to create
 //If you want to create a object with handle in preview, please inherit the "AbilityEventObj" with "AbilityEventObj_CreateObjWithHandle"
 
 namespace CombatEditor
 {
     [AbilityEvent]
-    [CreateAssetMenu(menuName = "AbilityEvents / Test")]
-    public class AbilityEventObj_Test : AbilityEventObj
+    [CreateAssetMenu(menuName = "AbilityEvents / PrintLog")]
+    public class AbilityEventObj_PrintLog : AbilityEventObj
     {
         //Write the data you need here.
-        public string testMsg = "Test";
+        public string text;
         public override EventTimeType GetEventTimeType()
         {
             return EventTimeType.EventTime;
         }
         public override AbilityEventEffect Initialize()
         {
-            return new AbilityEventEffect_Test(this);
+            return new AbilityEventEffect_PrintLog(this);
         }
-
 #if UNITY_EDITOR
         public override AbilityEventPreview InitializePreview()
         {
-            return new AbilityEventPreview_Test(this);
+            return new AbilityEventPreview_PrintLog(this);
         }
 #endif
     }
     //Write you logic here
-    public partial class AbilityEventEffect_Test : AbilityEventEffect
+    public partial class AbilityEventEffect_PrintLog : AbilityEventEffect
     {
-        public PlayerManager player;
         public override void StartEffect()
         {
             base.StartEffect();
-            player = _combatController.gameObject.GetComponent<PlayerManager>();
-            player.testMsg = EventObj.testMsg;
-            // Debug.Log(EventObj.testMsg);
+            Debug.Log(EventObj.text);
         }
         public override void EffectRunning()
         {
@@ -47,10 +43,10 @@ namespace CombatEditor
         }
     }
 
-    public partial class AbilityEventEffect_Test : AbilityEventEffect
+    public partial class AbilityEventEffect_PrintLog : AbilityEventEffect
     {
-        AbilityEventObj_Test EventObj => (AbilityEventObj_Test)_EventObj;
-        public AbilityEventEffect_Test(AbilityEventObj InitObj) : base(InitObj)
+        AbilityEventObj_PrintLog EventObj => (AbilityEventObj_PrintLog)_EventObj;
+        public AbilityEventEffect_PrintLog(AbilityEventObj InitObj) : base(InitObj)
         {
             _EventObj = InitObj;
         }
