@@ -176,12 +176,13 @@ namespace CombatEditor
 					//?斗配置存?的SO引用
 					EditorGUILayout.PropertyField(so.FindProperty("_combatDataStorage"));
 
-					if (NodeList == null || CombatDataStorge == null)
-					{
-						InitNodeReorableList();
-						// if (combatEditor.SelectedController._combatDataStorage == null)
-						// 	EditorGUILayout.HelpBox("Please replace CombatDataStorage with SO Object from Disk", MessageType.Error);
-					}
+					// if (NodeList == null || CombatDataStorge == null)
+					// {
+					InitNodeReorableList();
+					// if (combatEditor.SelectedController._combatDataStorage == null)
+					// 	EditorGUILayout.HelpBox("Please replace CombatDataStorage with SO Object from Disk", MessageType.Error);
+					// }
+					InitAnimator();
 					CombatDataStorge.Update();
 					NodeList.DoLayoutList();
 					CombatDataStorge.ApplyModifiedProperties();
@@ -377,8 +378,14 @@ namespace CombatEditor
 		{
 			if (combatEditor.SelectedController._combatDataStorage == null)
 			{
-				combatEditor.SelectedController._combatDataStorage = new CombatDataStorage();
+				CombatDataStorage temp = new CombatDataStorage();
+				temp.isTemplate = true;
+				combatEditor.SelectedController._combatDataStorage = temp;
 			}
+
+			if (combatEditor.SelectedController._combatDataStorage.isTemplate)
+				EditorGUILayout.HelpBox("Combat Data Storge is a template! Please replace it as your SO object! ", MessageType.Error);
+
 			CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
 			NodeList = new ReorderableList(CombatDataStorge, CombatDataStorge.FindProperty("Nodes"), true, true, true, true);
 			NodeList.drawHeaderCallback = (Rect rect) =>
@@ -391,9 +398,25 @@ namespace CombatEditor
 			};
 
 		}
+
+		private void InitAnimator()
+		{
+			if (CombatDataStorge != null)
+			{
+				CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
+				combatEditor.SelectedController._animator.runtimeAnimatorController = CombatDataStorge.targetObject.GetType().GetField("animator").GetValue(CombatDataStorge.targetObject) as RuntimeAnimatorController;
+			}
+			else
+			{
+				combatEditor.SelectedController._animator.runtimeAnimatorController = null;
+			}
+		}
 		public void SelectCombatConfig()
 		{
-			//CombatControllerSO = new SerializedObject(combatEditor.SelectedController);
+			// CombatControllerSO = new SerializedObject(combatEditor.SelectedController);
+			if (combatEditor == null)
+				combatEditor = CombatEditorUtility.GetCurrentEditor();
+
 			combatEditor.CurrentInspectedType = CombatEditor.InspectedType.CombatConfig;
 			Repaint();
 			InitNodeReorableList();

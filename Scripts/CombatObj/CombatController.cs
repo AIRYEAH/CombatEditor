@@ -56,7 +56,7 @@ namespace CombatEditor
     public class CombatController : MonoBehaviour
     {
         public HybridAnimancerComponent _animator;
-        public AbilityScriptableObject SelectedAbility;
+        // public AbilityScriptableObject SelectedAbility;
 
         // 添加CombatDataStorage引用
         [SerializeField]
@@ -97,11 +97,11 @@ namespace CombatEditor
             // ClearNullReference();
             // InitClipsOnRunningLayers();
             // InitAnimEffects();
-            // _animSpeedExecutor = new AnimSpeedExecutor(this);
-            // _moveExecutor = new MoveExecutor(this);
+            _animSpeedExecutor = new AnimSpeedExecutor(this);
+            _moveExecutor = new MoveExecutor(this);
         }
 
-        public void InitClipsOnRunningLayers()
+        private void InitClipsOnRunningLayers()
         {
             LayerActiveClipIDs = new List<int[]>();
             // _animator = GetComponentInChildren<HybridAnimancerComponent>();
@@ -109,12 +109,12 @@ namespace CombatEditor
             // {
             //     LayerActiveClipIDs.Add(null);
             // }
-            for (int i = 0; i < 2; i++)     //默认了战斗动画状态机的层数只有两层，此处需要优化
+            for (int i = 0; i < _combatDataStorage.animator.layers.Length; i++)     //默认了战斗动画状态机的层数只有两层，此处需要优化
             {
                 LayerActiveClipIDs.Add(null);
             }
         }
-        public void ClearNullReference()
+        private void ClearNullReference()
         {
             for (int i = 0; i < CombatDatas.Count; i++)
             {
@@ -146,6 +146,7 @@ namespace CombatEditor
 
         private void Update()
         {
+            //这里可以在后边移到手写的状态机的StateTick中去
             if (_animator.runtimeAnimatorController == null) return;
             if (_combatDataStorage == null) return;
 
@@ -171,12 +172,12 @@ namespace CombatEditor
         /// Fetch states and clips in animator.
         /// UpdateMode : 0:Update 1:FixedUpdate.
         /// </summary>
-        public void RunEffects(int UpdateMode = 0)
+        private void RunEffects(int UpdateMode = 0)
         {
             if (_animator.runtimeAnimatorController == null) return;
             if (ClipID_To_EventEffects == null) return;
 
-            for (int i = 0; i < _animator.layerCount; i++)
+            for (int i = 0; i < _combatDataStorage.animator.layers.Length; i++)
             {
                 var LayerIndex = i;
                 if (!_animator.IsInTransition(LayerIndex))
@@ -231,7 +232,7 @@ namespace CombatEditor
         /// <param name="NormalizedTime"></param>
         /// <param name="LayerIndex"></param>
         /// <param name="UpdateMode"> 0 : Update 1:FixedUpdate </param>
-        public void RunningEventsOnClip(int clipID, float NormalizedTime, int LayerIndex, int UpdateMode = 0)
+        private void RunningEventsOnClip(int clipID, float NormalizedTime, int LayerIndex, int UpdateMode = 0)
         {
             List<AbilityEventWithEffects> abilityEventWithEffects = ClipID_To_EventEffects[clipID];
             for (int j = 0; j < abilityEventWithEffects.Count; j++)
@@ -303,7 +304,7 @@ namespace CombatEditor
         /// </summary>
         /// <param name="LayerIndex"></param>
         /// <param name="clips"></param>
-        public void UpdateLayerActiveClips(int LayerIndex, int[] clipsID)
+        private void UpdateLayerActiveClips(int LayerIndex, int[] clipsID)
         {
             bool RunningClipsChangedInLayer = false;
             if (LayerActiveClipIDs[LayerIndex] != null)
@@ -406,7 +407,7 @@ namespace CombatEditor
 
 
 
-        public void InitAnimEffects()
+        private void InitAnimEffects()
         {
             for (int i = 0; i < CombatDatas.Count; i++)
             {
@@ -429,7 +430,7 @@ namespace CombatEditor
         }
 
         List<AbilityEventEffect> _abilityEventEffects = new List<AbilityEventEffect>();
-        public AbilityEventEffect AddEventEffects(int clipID, AbilityEvent eve)
+        private AbilityEventEffect AddEventEffects(int clipID, AbilityEvent eve)
         {
             AbilityEventObj EffectObj = eve.Obj;
             AbilityEventEffect _abilityEventEffect = EffectObj.Initialize();
@@ -476,6 +477,7 @@ namespace CombatEditor
         public void SetCombatDataStorage(CombatDataStorage storage)
         {
             _combatDataStorage = storage;
+            AnimatorReplace(storage.animator);
             ClipID_To_EventEffects = new Dictionary<int, List<AbilityEventWithEffects>>();
             // 重新初始化相关数据
             ClearNullReference();
@@ -486,9 +488,17 @@ namespace CombatEditor
         public void UnloadCurrentCombatData()
         {
             _combatDataStorage = null;
+            AnimatorReplace(null);
             // 重新初始化相关数据
             ClipID_To_EventEffects = null;
 
+        }
+
+        private void AnimatorReplace(RuntimeAnimatorController runtimeAnimator)
+        {
+            _animator.Stop();
+            _animator.runtimeAnimatorController = runtimeAnimator;
+            _animator.PlayController();
         }
         /// <summary>
         /// 运行时加载CombatDataStorage

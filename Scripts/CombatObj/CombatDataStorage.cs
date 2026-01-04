@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.Animations;
 using UnityEngine;
 
 namespace CombatEditor
@@ -6,9 +7,28 @@ namespace CombatEditor
     [CreateAssetMenu(menuName = "Combat/Combat Data Storage")]
     public class CombatDataStorage : ScriptableObject
     {
+        [HideInInspector]
+        public bool isTemplate = false;
+
+        [SerializeField]
+        public AnimatorController animator;
+
         [SerializeField]
         public List<CombatGroup> CombatDatas = new List<CombatGroup>();
 
+        public CombatDataStorage()
+        {
+            isTemplate = true;
+        }
+
+        /// <summary>
+        /// Called when the script is loaded or a value is changed in the
+        /// inspector (Called in the editor only).
+        /// </summary>
+        private void OnValidate()
+        {
+            isTemplate = false;
+        }
         /// <summary>
         /// 添加战斗组
         /// </summary>

@@ -17,6 +17,9 @@ namespace CombatEditor
         {
             serializedObject.Update();
 
+            // EditorGUILayout.PropertyField(serializedObject.FindProperty("isTemplate"), true);
+            // Animator引用
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("animator"), true);
             // 显示CombatDatas列表
             EditorGUILayout.PropertyField(serializedObject.FindProperty("CombatDatas"), true);
 
