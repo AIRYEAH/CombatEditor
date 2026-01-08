@@ -13,6 +13,8 @@ namespace CombatEditor
         /// CurrentSelectedController;
         /// </summary>
         public CombatController SelectedController;
+        public GameObject currentPreviewWeaponModel_L;
+        public GameObject currentPreviewWeaponModel_R;
         // public CombatDataStorage CombatDataStorage;
         /// <summary>
         /// Used to load controller after exit playmode.

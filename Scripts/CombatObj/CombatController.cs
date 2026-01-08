@@ -39,7 +39,7 @@ namespace CombatEditor
     [System.Serializable]
     public class CharacterNode
     {
-        public enum NodeType { Animator, BottomCenter, BodyCenter, Head, Spine, Hand, RHand, LHand, Foot, LFoot, RFoot, Weapon, WeaponBase, WeaponTip }
+        public enum NodeType { Animator, Spine, Weapon_L, Weapon_R }
         public NodeType type;
         public Transform NodeTrans;
     }

@@ -10,11 +10,24 @@ namespace CombatEditor
 {
 	public class CombatInspector : EditorWindow
 	{
-
-		float Height_Top = 40;
+		//Object Property
 		CombatEditor combatEditor;
+		GameObject previewWeapon_L;
+		GameObject previewWeapon_R;
+		ReorderableList NodeList;
+		SerializedObject go_combatController;   //选中游戏对象的CombatController
+		SerializedObject go_combatDataStorge;   //选中游戏对象的CombatDataStorge
 
-		//ReorderableList NodeList;
+		//GUI Property
+		float Height_Top = 40;
+		Editor InspectedEditor;
+		Vector2 InspectorScrollPos;
+		int SelectedClipIndex;
+		Vector2 Scroll;
+		int CurrentGroupIndex = -1;
+		int CurrentAbilityIndex = -1;
+		public Rect WindowRect = new Rect(20, 20, 120, 50);
+
 
 		[MenuItem("Tools/CombatInspector")]
 		static void Init()
@@ -24,18 +37,29 @@ namespace CombatEditor
 			//window.InitWindow();
 		}
 
+		void OnEnable()
+		{
+
+		}
+
+		void OnDisable()
+		{
+			// if (EditorUtility.DisplayDialog("提示", "存在未保存的修改，是否保存？", "保存", "放弃"))
+			// {
+			// 	// SaveChanges();
+			// }
+			if (combatEditor.SelectedController != null)
+				combatEditor.SelectedController._combatDataStorage = null;      //退出时清空CombatDataStorage
+		}
 		public static CombatInspector CreateWindow()
 		{
 			CombatInspector window = (CombatInspector)EditorWindow.GetWindow(typeof(CombatInspector));
 			window.Show();
 			return window;
 		}
-		private void OnEnable()
-		{
-		}
 		public void ResetInspector()
 		{
-			CombatDataStorge = null;
+			go_combatDataStorge = null;
 			NodeList = null;
 		}
 
@@ -45,15 +69,6 @@ namespace CombatEditor
 			PaintInspector();
 		}
 
-		Editor InspectedEditor;
-		Vector2 InspectorScrollPos;
-
-		int SelectedClipIndex;
-
-		Vector2 Scroll;
-
-		int CurrentGroupIndex = -1;
-		int CurrentAbilityIndex = -1;
 		public void PaintInspector()
 		{
 			if (!CombatEditorUtility.EditorExist())
@@ -62,9 +77,11 @@ namespace CombatEditor
 			}
 			combatEditor = CombatEditorUtility.GetCurrentEditor();
 			if (combatEditor.SelectedController == null)
-			{
 				return;
-			}
+
+			CombatController controller = combatEditor.SelectedController;
+			go_combatController = controller != null ? new SerializedObject(controller) : null;
+			go_combatDataStorge = combatEditor.SelectedController._combatDataStorage != null ? new SerializedObject(controller._combatDataStorage) : null;
 
 			#region Init
 			var HeaderStyle = combatEditor.HeaderStyle;
@@ -161,34 +178,10 @@ namespace CombatEditor
 			{
 				if (combatEditor.SelectedController != null)
 				{
-					CombatController controller = combatEditor.SelectedController;
-					SerializedObject so = new SerializedObject(controller);
-					//CombatControllerSO.Update();
-					//Animtor����
-					EditorGUILayout.PropertyField(so.FindProperty("_animator"));
-					if (combatEditor.SelectedController._animator != null)
-					{
-						if (combatEditor.SelectedController._animator.transform == combatEditor.SelectedController.transform)
-						{
-							EditorGUILayout.HelpBox("Animator transform should be the child transform of Combatcontroller!", MessageType.Error);
-						}
-					}
-					//?������¸?ŪSO����
-					EditorGUILayout.PropertyField(so.FindProperty("_combatDataStorage"));
-
-					// if (NodeList == null || CombatDataStorge == null)
-					// {
-					InitNodeReorableList();
-					// if (combatEditor.SelectedController._combatDataStorage == null)
-					// 	EditorGUILayout.HelpBox("Please replace CombatDataStorage with SO Object from Disk", MessageType.Error);
-					// }
 					InitAnimator();
-					CombatDataStorge.Update();
-					NodeList.DoLayoutList();
-					CombatDataStorge.ApplyModifiedProperties();
-					so.ApplyModifiedProperties();
-
-
+					InitCombatDataStorge();
+					InitPreviewWeapon();
+					InitNodeReorableList();
 				}
 			}
 			EditorGUILayout.EndScrollView();
@@ -207,7 +200,7 @@ namespace CombatEditor
 			string TargetPath = path + InsObj.name + ".asset";
 			while (true)
 			{
-				//??????���??????
+				//??????ļ??????
 				if (File.Exists(TargetPath))
 				{
 					TargetPath = path + InsObj.name + "_" + index + ".asset";
@@ -222,11 +215,6 @@ namespace CombatEditor
 			Debug.Log("Combat Editor file Create");
 			return InsObj;
 		}
-
-
-
-
-		public Rect WindowRect = new Rect(20, 20, 120, 50);
 
 		public void CreateInspectedObj(Object InspectedObj)
 		{
@@ -322,6 +310,14 @@ namespace CombatEditor
 			CombatController controller = combatEditor.SelectedController;
 			HybridAnimancerComponent animator = controller._animator;
 			if (animator == null) return;
+
+			if (animator.runtimeAnimatorController == null)
+			{
+				string msg = combatEditor.SelectedController._combatDataStorage.ToString() + " is null or not set animator controller!";
+				EditorGUILayout.HelpBox(msg, MessageType.Warning);
+				return;
+			}
+
 			var clips = animator.runtimeAnimatorController.animationClips;
 
 			//Animator clips may change, so the index should auto change.
@@ -370,47 +366,7 @@ namespace CombatEditor
 
 			combatEditor.LoadL3();
 		}
-		ReorderableList NodeList;
 
-		SerializedObject CombatDataStorge;
-
-		public void InitNodeReorableList()
-		{
-			if (combatEditor.SelectedController._combatDataStorage == null)
-			{
-				CombatDataStorage temp = new CombatDataStorage();
-				temp.isTemplate = true;
-				combatEditor.SelectedController._combatDataStorage = temp;
-			}
-
-			if (combatEditor.SelectedController._combatDataStorage.isTemplate)
-				EditorGUILayout.HelpBox("Combat Data Storge is a template! Please replace it as your SO object! ", MessageType.Error);
-
-			CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
-			NodeList = new ReorderableList(CombatDataStorge, CombatDataStorge.FindProperty("Nodes"), true, true, true, true);
-			NodeList.drawHeaderCallback = (Rect rect) =>
-				 {
-					 GUI.Label(rect, "CharacterNodes");
-				 };
-			NodeList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
-			{
-				EditorGUI.PropertyField(new Rect(rect.x, rect.y + 2, rect.width, rect.height), NodeList.serializedProperty.GetArrayElementAtIndex(index));
-			};
-
-		}
-
-		private void InitAnimator()
-		{
-			if (CombatDataStorge != null)
-			{
-				CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
-				combatEditor.SelectedController._animator.runtimeAnimatorController = CombatDataStorge.targetObject.GetType().GetField("animator").GetValue(CombatDataStorge.targetObject) as RuntimeAnimatorController;
-			}
-			else
-			{
-				combatEditor.SelectedController._animator.runtimeAnimatorController = null;
-			}
-		}
 		public void SelectCombatConfig()
 		{
 			// CombatControllerSO = new SerializedObject(combatEditor.SelectedController);
@@ -420,6 +376,144 @@ namespace CombatEditor
 			combatEditor.CurrentInspectedType = CombatEditor.InspectedType.CombatConfig;
 			Repaint();
 			InitNodeReorableList();
+		}
+
+		private void InitAnimator()
+		{
+			SerializedObject preview_so = new SerializedObject(combatEditor.SelectedController);
+			//Animtor引用
+			EditorGUILayout.PropertyField(preview_so.FindProperty("_animator"));
+			if (combatEditor.SelectedController._animator != null)
+			{
+				if (combatEditor.SelectedController._animator.transform == combatEditor.SelectedController.transform)
+				{
+					EditorGUILayout.HelpBox("Animator transform should be the child transform of Combatcontroller!", MessageType.Error);
+				}
+			}
+			else
+			{
+				combatEditor.SelectedController._animator = combatEditor.SelectedController.GetComponentInChildren<HybridAnimancerComponent>();
+			}
+
+			preview_so.ApplyModifiedProperties();
+		}
+
+		private void InitCombatDataStorge()
+		{
+			SerializedObject preview_so = new SerializedObject(combatEditor.SelectedController);
+			EditorGUILayout.PropertyField(preview_so.FindProperty("_combatDataStorage"));
+			preview_so.ApplyModifiedProperties();
+
+			if (combatEditor.SelectedController._combatDataStorage == null)
+			{
+				EditorGUILayout.HelpBox("Combat Data Storge is Empty! Please replace it as your SO object! ", MessageType.Error);
+				return;
+				// CombatDataStorage temp = new CombatDataStorage();
+				// temp.isTemplate = true;
+				// combatEditor.SelectedController._combatDataStorage = temp;
+			}
+
+			// if (combatEditor.SelectedController._combatDataStorage.isTemplate)
+
+			if (go_combatDataStorge != null)
+			{
+				// CombatDataStorge = new SerializedObject(combatEditor.SelectedController._combatDataStorage);
+				combatEditor.SelectedController._animator.runtimeAnimatorController = go_combatDataStorge.targetObject.GetType().GetField("animator").GetValue(go_combatDataStorge.targetObject) as RuntimeAnimatorController;
+			}
+			else
+			{
+				combatEditor.SelectedController._animator.runtimeAnimatorController = null;
+				return;
+			}
+		}
+
+		private void InitNodeReorableList()
+		{
+			//Bug很多，会引起窗口错误打开，先不用了
+			// SerializedObject preview_so = new SerializedObject(combatEditor.SelectedController);
+
+			// NodeList = new ReorderableList(preview_so, preview_so.FindProperty("Nodes"), true, true, true, true);
+			// NodeList.drawHeaderCallback = (Rect rect) =>
+			// 	 {
+			// 		 GUI.Label(rect, "CharacterNodes");
+			// 	 };
+			// NodeList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
+			// {
+			// 	EditorGUI.PropertyField(new Rect(rect.x, rect.y + 2, rect.width, rect.height), NodeList.serializedProperty.GetArrayElementAtIndex(index));
+			// };
+			// NodeList.DoLayoutList();
+
+			// preview_so.ApplyModifiedProperties();
+		}
+
+
+		private void InitPreviewWeapon()
+		{
+			EditorGUI.BeginChangeCheck();
+			combatEditor.currentPreviewWeaponModel_L = (GameObject)EditorGUILayout.ObjectField("WeaponModel_L", previewWeapon_L, typeof(GameObject), false);
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				//清理旧的预览武器
+				if (previewWeapon_L != null)
+					DestroyImmediate(previewWeapon_L);
+
+				if (combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_L))
+					LoadPreviewWeapon(ref combatEditor.currentPreviewWeaponModel_L, combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_L), out previewWeapon_L);
+
+				Repaint();
+			}
+
+			EditorGUI.BeginChangeCheck();
+			combatEditor.currentPreviewWeaponModel_R = (GameObject)EditorGUILayout.ObjectField("WeaponModel_R", previewWeapon_R, typeof(GameObject), false);
+			if (EditorGUI.EndChangeCheck())
+			{
+				if (previewWeapon_R != null)
+					DestroyImmediate(previewWeapon_R);
+
+				if (combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_R))
+					LoadPreviewWeapon(ref combatEditor.currentPreviewWeaponModel_R, combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_R), out previewWeapon_R);
+
+				Repaint();
+			}
+
+			// 显示提示信息
+			if (combatEditor.SelectedController == null)
+			{
+				EditorGUILayout.HelpBox("Please select a CombatController first", MessageType.Warning);
+			}
+			else if (Application.isPlaying)
+			{
+				EditorGUILayout.HelpBox("Preview weapon cannot be created during play mode", MessageType.Info);
+			}
+
+			if (combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_L) == null)
+				EditorGUILayout.HelpBox("CharacterNode Weapon_L is not set", MessageType.Warning);
+
+
+			if (combatEditor.SelectedController.GetNodeTranform(CharacterNode.NodeType.Weapon_R) == null)
+				EditorGUILayout.HelpBox("CharacterNode Weapon_R is not set", MessageType.Warning);
+		}
+
+		private void LoadPreviewWeapon(ref GameObject targetWeapon, Transform targetHangPoint, out GameObject currentLoadedWeapon)
+		{
+			if (targetWeapon != null && combatEditor.SelectedController != null)
+			{
+				currentLoadedWeapon = Instantiate(targetWeapon, targetHangPoint);
+				currentLoadedWeapon.name = targetHangPoint.ToString();
+
+				// 确保预览武器不会在游戏运行时存在
+				if (Application.isPlaying)
+				{
+					DestroyImmediate(currentLoadedWeapon);
+					currentLoadedWeapon = null;
+					EditorUtility.DisplayDialog("Warning", "Cannot create preview weapon during play mode", "OK");
+				}
+			}
+			else
+			{
+				currentLoadedWeapon = null;
+			}
 		}
 	}
 }
