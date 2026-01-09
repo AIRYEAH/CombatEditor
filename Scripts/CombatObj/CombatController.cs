@@ -496,8 +496,16 @@ namespace CombatEditor
 
         private void AnimatorReplace(RuntimeAnimatorController runtimeAnimator)
         {
-            _animator.Stop();
+            _animator.playableGraph.Stop();
+
+            foreach (var layer in _animator.Layers)
+                layer.DestroyStates();
+
+            //Custom Part 状态机替换
             _animator.runtimeAnimatorController = runtimeAnimator;
+            //强制初始化
+            _animator.Evaluate();
+            _animator.playableGraph.Play();
             _animator.PlayController();
         }
         /// <summary>
